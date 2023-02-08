@@ -351,6 +351,74 @@ uint32_t WriteMovToRCX(uint8_t* dst, uint64_t val)
 
 }
 
+//保存线程所有的执行现场
+uint32_t WriteSaveContext(uint8_t* dst)
+{
+	uint8_t asmBytes[] =
+	{
+		0x50, //push rax
+		0x51, //push rcx
+		0x52, //push rdx
+		0x53, //push rbx
+		0x54, //push rsp
+	    0x55, //push rbp
+		0x56, //push rsi
+	    0x57,//push rdi
+		0x41, 0x50, //push r8
+		0x41, 0x51, //push r9
+		0x41, 0x52, //push r10
+		0x41, 0x53, //push r11
+		0x41, 0x54, //push r12
+		0x41, 0x55, //push r13
+		0x41, 0x56, //push r14
+		0x41, 0x57, //push r15
+		0x9c, //pushfq
+		0x48, 0x83, 0xEC, 0x40, //sub rsp, 64 -> space for xmm registers
+		0x0F, 0x11, 0x04, 0x24, // movups xmmword ptr [rsp],xmm0
+		0x0F, 0x11, 0x4C, 0x24, 0x10, //movups xmmword ptr [rsp+10h],xmm1
+		0x0F, 0x11, 0x54, 0x24, 0x20, //movups xmmword ptr [rsp+20h],xmm2
+		0x0F, 0x11, 0x5C, 0x24, 0x30 //movups  xmmword ptr [rsp+30h],xmm3
+	};
+	
+	memcpy(dst, &asmBytes, sizeof(asmBytes));
+	return sizeof(asmBytes);
+}
+
+//恢复线程所有的执行现场
+uint32_t WriteRestoreContext(uint8_t* dst)
+{
+
+	uint8_t asmBytes[] =
+	{
+		0x0F, 0x10, 0x04, 0x24, //movups xmm0,xmmword ptr[rsp]
+		0x0F, 0x10, 0x4C, 0x24, 0x10,//movups xmm1,xmmword ptr[rsp + 10h]
+		0x0F, 0x10, 0x54, 0x24, 0x20,//movups xmm2,xmmword ptr[rsp + 20h]
+		0x0F, 0x10, 0x5C, 0x24, 0x30,//movups xmm3,xmmword ptr[rsp + 30h]
+		0x48, 0x83, 0xC4, 0x40,//add rsp,40h
+		0x9d, //popfq
+		0x41, 0x5f,//pop r15
+		0x41, 0x5e,//pop r14
+		0x41, 0x5d,//pop r13
+		0x41, 0x5c,//pop r12
+		0x41, 0x5b,//pop r11
+		0x41, 0x5a,//pop r10
+		0x41, 0x59,//pop r9
+		0x41, 0x58,//pop r8
+		0x5f, //pop rdi
+		0x5e, //pop rsi
+		0x5d, //pop rbp
+		0x5c, //pop rsp
+		0x5b, //pop rbx
+		0x5a, //pop rdx
+		0x59, //pop rcx
+		0x58, //pop rax
+
+	};
+	memcpy(dst, &asmBytes, sizeof(asmBytes));
+	return sizeof(asmBytes);
+}
+
+
 uint32_t WriteSaveArgumentRegisters(uint8_t* dst)
 {
 	uint8_t asmBytes[] =
@@ -365,7 +433,7 @@ uint32_t WriteSaveArgumentRegisters(uint8_t* dst)
 		0x0F, 0x11, 0x54, 0x24, 0x20, //movups xmmword ptr [rsp+20h],xmm2
 		0x0F, 0x11, 0x5C, 0x24, 0x30 //movups  xmmword ptr [rsp+30h],xmm3
 	};
-	
+
 	memcpy(dst, &asmBytes, sizeof(asmBytes));
 	return sizeof(asmBytes);
 }
@@ -389,6 +457,7 @@ uint32_t WriteRestoreArgumentRegisters(uint8_t* dst)
 	memcpy(dst, &asmBytes, sizeof(asmBytes));
 	return sizeof(asmBytes);
 }
+
 
 uint32_t WriteAddRSP32(uint8_t* dst)
 {
