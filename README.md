@@ -1,3 +1,5 @@
+添加测试， 从函数中间的地址进行Hook
+
 # Hooking By Example
 A series of increasingly complex programs demonstrating function hooking on 64 bit Windows. 
 
