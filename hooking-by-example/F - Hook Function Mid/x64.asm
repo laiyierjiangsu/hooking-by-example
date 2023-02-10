@@ -31,6 +31,11 @@ asm_func PROC
 asm_func ENDP
 
 asm_payload PROC
+	sub		rsp, 28h		; shadow stack
+	mov		[rsp], rcx
 	jmp payload
+	;跳转到返回地址
+	add		rsp, 28h		; restoring shadow stack
+	ret
 asm_payload ENDP
 END
